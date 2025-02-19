@@ -28,6 +28,9 @@ public class PlayerController : MonoBehaviour
     [Tooltip("Time window after leaving the ground during which the player can still jump. Helps with smoother jumps.")]
     public float coyoteTime = 0.2f;
 
+    [Tooltip("Maximum number of jumps allowed before needing to touch the ground.")]
+    public int maxJumpCount = 2; // Max jumps before requiring the player to touch the ground
+
     // Private variables, not exposed to the Unity Inspector.
     private Rigidbody rb; // The Rigidbody component, used for applying physics to the player.
     private Transform cameraTransform; // The camera's position for relative movement.
@@ -35,6 +38,8 @@ public class PlayerController : MonoBehaviour
     private float dashTimer = 0f; // Timer to keep track of the dash duration.
     private float lastDashTime = -1f; // Stores the last time the player dashed.
     private float lastGroundedTime = 0f; // Stores the last time the player was grounded.
+
+    private int currentJumpCount = 0; // Tracks the number of jumps performed
 
     void Start()
     {
@@ -54,10 +59,13 @@ public class PlayerController : MonoBehaviour
         if (IsGrounded())
         {
             lastGroundedTime = Time.time;
+
+            // Reset the jump count when grounded
+            currentJumpCount = 0;
         }
 
-        // Allow the player to jump if they're grounded or within coyote time.
-        if (Input.GetKeyDown(KeyCode.Space) && (IsGrounded() || Time.time - lastGroundedTime <= coyoteTime))
+        // Allow the player to jump if they're grounded, within coyote time, or have remaining jumps
+        if (Input.GetKeyDown(KeyCode.Space) && (IsGrounded() || Time.time - lastGroundedTime <= coyoteTime || currentJumpCount < maxJumpCount))
         {
             Jump();
         }
@@ -127,6 +135,7 @@ public class PlayerController : MonoBehaviour
     void Jump()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+        currentJumpCount++; // Increment jump count after jumping
     }
 
     // Start the dash, setting the dash timer and updating the last dash time.
